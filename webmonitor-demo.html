@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣銀行匯率與黃金價格 - 純JavaScript版本</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .controls {
+            padding: 30px;
+            background: #f8f9ff;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-weight: normal;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        
+        select {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .fetch-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .fetch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        .fetch-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .status {
+            padding: 20px 30px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin: 0 30px;
+            border-radius: 0 8px 8px 0;
+            font-weight: 500;
+        }
+        
+        .results {
+            padding: 30px;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .data-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .data-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .currency-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        
+        .rate-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .rate-info:last-child {
+            border-bottom: none;
+        }
+        
+        .rate-label {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+        
+        .rate-value {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .cors-warning {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 30px;
+        }
+        
+        .cors-warning h4 {
+            margin: 0 0 10px 0;
+        }
+        
+        .cors-warning ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏦 台灣銀行匯率與黃金價格</h1>
+            <p>純JavaScript版本 - 完全在瀏覽器中運行</p>
+        </div>
+        
+        <div class="cors-warning">
+            <h4>⚠️ CORS代理使用說明</h4>
+            <p>由於瀏覽器安全限制，此工具需要使用CORS代理服務來訪問台灣銀行網站：</p>
+            <ul>
+                <li>第一次使用可能需要到 <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">cors-anywhere.herokuapp.com/corsdemo</a> 啟用臨時訪問</li>
+                <li>如果代理服務不可用，系統會自動使用備用代理或模擬資料</li>
+                <li>實際部署時建議使用自己的代理服務器</li>
+            </ul>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>匯率貨幣：</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="usd" checked> 美金 (USD)</label>
+                    <label><input type="checkbox" id="jpy" checked> 日圓 (JPY)</label>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>黃金價格：</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="goldTwd"> 台幣計價黃金</label>
+                    <label><input type="checkbox" id="goldUsd"> 美金計價黃金</label>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label for="rateType">匯率類型：</label>
+                <select id="rateType">
+                    <option value="both">買入＋賣出</option>
+                    <option value="buy">僅買入</option>
+                    <option value="sell">僅賣出</option>
+                    <option value="avg">平均價</option>
+                </select>
+                
+                <button class="fetch-btn" onclick="fetchRates()">
+                    🔄 獲取最新資料
+                </button>
+            </div>
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <div class="results">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                正在從台灣銀行獲取資料...
+            </div>
+            
+            <div id="error" class="error" style="display: none;"></div>
+            
+            <div id="dataGrid" class="data-grid"></div>
+        </div>
+    </div>
+
+    <!-- 引入API客戶端 -->
+    <script src="api_client.js"></script>
+    
+    <script>
+        // 建立API實例
+        const api = new BankOfTaiwanAPI();
+        let lastUpdateTime = null;
+
+        /**
+         * 獲取匯率資料
+         */
+        async function fetchRates() {
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            const statusEl = document.getElementById('status');
+            const dataGridEl = document.getElementById('dataGrid');
+            const fetchBtn = document.querySelector('.fetch-btn');
+            
+            // 重置顯示狀態
+            loadingEl.style.display = 'block';
+            errorEl.style.display = 'none';
+            statusEl.style.display = 'none';
+            dataGridEl.innerHTML = '';
+            fetchBtn.disabled = true;
+            
+            try {
+                // 取得使用者設定
+                const options = {
+                    currencies: {
+                        USD: document.getElementById('usd').checked,
+                        JPY: document.getElementById('jpy').checked
+                    },
+                    gold: {
+                        TWD: document.getElementById('goldTwd').checked,
+                        USD: document.getElementById('goldUsd').checked
+                    },
+                    rateType: document.getElementById('rateType').value
+                };
+                
+                console.log('發送API請求:', options);
+                
+                // 呼叫API
+                const result = await api.getRates(options);
+                console.log('API回應:', result);
+                
+                loadingEl.style.display = 'none';
+                
+                if (result.success) {
+                    displayResults(result.data, result.timestamp, result.source);
+                    statusEl.textContent = `✅ 成功獲取資料 - 更新時間：${new Date(result.timestamp).toLocaleString('zh-TW')}`;
+                    statusEl.style.display = 'block';
+                    lastUpdateTime = result.timestamp;
+                } else {
+                    throw new Error(result.message || '未知錯誤');
+                }
+                
+            } catch (error) {
+                console.error('獲取資料失敗:', error);
+                loadingEl.style.display = 'none';
+                errorEl.textContent = `❌ 獲取資料失敗: ${error.message}`;
+                errorEl.style.display = 'block';
+            } finally {
+                fetchBtn.disabled = false;
+            }
+        }
+
+        /**
+         * 顯示結果資料
+         */
+        function displayResults(data, timestamp, source) {
+            const dataGridEl = document.getElementById('dataGrid');
+            dataGridEl.innerHTML = '';
+            
+            // 顯示匯率資料
+            if (data.USD) {
+                const usdCard = createDataCard('💵 美金 (USD)', data.USD, 'TWD');
+                dataGridEl.appendChild(usdCard);
+            }
+            
+            if (data.JPY) {
+                const jpyCard = createDataCard('💴 日圓 (JPY)', data.JPY, 'TWD');
+                dataGridEl.appendChild(jpyCard);
+            }
+            
+            // 顯示黃金資料
+            if (data.GOLD_TWD) {
+                const goldTwdCard = createGoldCard('🥇 台幣計價黃金', data.GOLD_TWD);
+                dataGridEl.appendChild(goldTwdCard);
+            }
+            
+            if (data.GOLD_USD) {
+                const goldUsdCard = createGoldCard('🥇 美金計價黃金', data.GOLD_USD);
+                dataGridEl.appendChild(goldUsdCard);
+            }
+            
+            if (dataGridEl.children.length === 0) {
+                dataGridEl.innerHTML = '<p style="text-align: center; color: #666; font-size: 1.2em;">請選擇要顯示的資料類型</p>';
+            }
+        }
+
+        /**
+         * 建立匯率資料卡片
+         */
+        function createDataCard(title, rateData, baseCurrency) {
+            const card = document.createElement('div');
+            card.className = 'data-card';
+            
+            let rateInfoHTML = '';
+            if (rateData.buy !== undefined) {
+                rateInfoHTML += `<div class="rate-info">
+                    <span class="rate-label">買入價</span>
+                    <span class="rate-value">${rateData.buy.toFixed(4)}</span>
+                </div>`;
+            }
+            if (rateData.sell !== undefined) {
+                rateInfoHTML += `<div class="rate-info">
+                    <span class="rate-label">賣出價</span>
+                    <span class="rate-value">${rateData.sell.toFixed(4)}</span>
+                </div>`;
+            }
+            if (rateData.cash_buy !== undefined) {
+                rateInfoHTML += `<div class="rate-info">
+                    <span class="rate-label">現金買入</span>
+                    <span class="rate-value">${rateData.cash_buy.toFixed(4)}</span>
+                </div>`;
+            }
+            if (rateData.cash_sell !== undefined) {
+                rateInfoHTML += `<div class="rate-info">
+                    <span class="rate-label">現金賣出</span>
+                    <span class="rate-value">${rateData.cash_sell.toFixed(4)}</span>
+                </div>`;
+            }
+            
+            card.innerHTML = `
+                <div class="currency-title">${title}</div>
+                ${rateInfoHTML}
+            `;
+            
+            return card;
+        }
+
+        /**
+         * 建立黃金資料卡片
+         */
+        function createGoldCard(title, goldData) {
+            const card = document.createElement('div');
+            card.className = 'data-card';
+            
+            card.innerHTML = `
+                <div class="currency-title">${title}</div>
+                <div class="rate-info">
+                    <span class="rate-label">銀行買入價</span>
+                    <span class="rate-value">${goldData.buy.toLocaleString()}</span>
+                </div>
+                <div class="rate-info">
+                    <span class="rate-label">銀行賣出價</span>
+                    <span class="rate-value">${goldData.sell.toLocaleString()}</span>
+                </div>
+                <div class="rate-info">
+                    <span class="rate-label">單位</span>
+                    <span class="rate-value">${goldData.unit}</span>
+                </div>
+                <div class="rate-info">
+                    <span class="rate-label">計價貨幣</span>
+                    <span class="rate-value">${goldData.currency}</span>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // 頁面載入時自動獲取資料
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('頁面載入完成，準備獲取資料...');
+            fetchRates();
+        });
+
+        // 每30秒自動更新一次（可選）
+        // setInterval(fetchRates, 30000);
+    </script>
+</body>
+</html> 
