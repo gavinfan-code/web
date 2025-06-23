@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青年崇拜活動看板</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .activity-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #FF6B6B, #4ECDC4, #45B7D1, #96CEB4, #FFEAA7);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .activity-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .card-content {
+            color: #34495e;
+            line-height: 1.8;
+            margin-bottom: 20px;
+            white-space: pre-line;
+        }
+
+        .card-datetime {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: 500;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .card-location {
+            display: flex;
+            align-items: center;
+            color: #7f8c8d;
+            margin: 15px 0;
+            font-size: 0.95rem;
+        }
+
+        .card-location i {
+            margin-right: 8px;
+            color: #e74c3c;
+        }
+
+        .register-btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E8E);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+            margin-top: 15px;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .video-container {
+            margin: 20px 0;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 200px;
+            border: none;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: rgba(231, 76, 60, 0.1);
+            border: 2px solid #e74c3c;
+            color: #e74c3c;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .info-message {
+            background: rgba(52, 152, 219, 0.1);
+            border: 2px solid #3498db;
+            color: #2980b9;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .info-message i {
+            font-size: 1.2rem;
+        }
+
+        .file-upload-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+        }
+
+        .upload-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .upload-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .upload-card p {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .upload-btn, .sample-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .sample-btn {
+            background: linear-gradient(45deg, #4ECDC4, #44A08D);
+        }
+
+        .upload-btn:hover, .sample-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .upload-btn i, .sample-btn i {
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .activities-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .activity-card {
+                padding: 20px;
+            }
+            
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-heart"></i> 青年崇拜活動看板 <i class="fas fa-heart"></i></h1>
+            <p>與主同行，青春飛揚！</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <i class="fas fa-spinner"></i>
+            載入活動資訊中...
+        </div>
+
+        <div id="file-upload-section" class="file-upload-section" style="display: none;">
+            <div class="upload-card">
+                <h3><i class="fas fa-upload"></i> 上傳活動Excel檔案</h3>
+                <p>選擇你的 Excel 檔案來載入活動資料</p>
+                <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display: none;">
+                <button class="upload-btn" onclick="document.getElementById('excel-file-input').click()">
+                    <i class="fas fa-file-excel"></i> 選擇Excel檔案
+                </button>
+                <button class="sample-btn" onclick="useSampleData()">
+                    <i class="fas fa-eye"></i> 使用示例數據
+                </button>
+            </div>
+        </div>
+
+        <div id="activities-container" class="activities-grid" style="display: none;">
+            <!-- Activities will be dynamically loaded here -->
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>載入活動資訊時發生錯誤，請稍後再試或聯繫管理員。</p>
+        </div>
+
+        <div id="info-message" class="info-message" style="display: none;">
+            <i class="fas fa-info-circle"></i>
+            <p></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        /**
+         * Main application class for youth worship activity board
+         */
+        class ActivityBoard {
+            constructor() {
+                this.activitiesContainer = document.getElementById('activities-container');
+                this.loadingElement = document.getElementById('loading');
+                this.errorElement = document.getElementById('error-message');
+                this.infoElement = document.getElementById('info-message');
+                this.fileUploadSection = document.getElementById('file-upload-section');
+                this.fileInput = document.getElementById('excel-file-input');
+                
+                // Set up file input listener
+                this.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+            }
+
+            /**
+             * Initialize the application
+             */
+            async init() {
+                try {
+                    await this.loadActivities();
+                } catch (error) {
+                    console.error('Failed to initialize activity board:', error);
+                    this.showError();
+                }
+            }
+
+            /**
+             * Load activities - show file upload interface for local development
+             * @returns {Promise<void>}
+             */
+            async loadActivities() {
+                try {
+                    // For local development without HTTP server, show file upload interface
+                    if (window.location.protocol === 'file:') {
+                        console.log('檢測到本地檔案協議，顯示檔案上傳介面');
+                        this.showFileUploadInterface();
+                        return;
+                    }
+                    
+                    // Try to load Excel file (for HTTP server environment)
+                    try {
+                        console.log('嘗試載入Excel檔案: web_activity.xlsx');
+                        const excelData = await this.loadExcelFile('web_activity.xlsx');
+                        console.log('Excel檔案載入成功:', excelData);
+                        await this.renderActivities(excelData);
+                        return;
+                    } catch (excelError) {
+                        console.log('Excel檔案載入失敗:', excelError.message);
+                        this.showFileUploadInterface();
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Error loading activities:', error);
+                    this.showError('載入活動時發生錯誤');
+                }
+            }
+
+            /**
+             * Show file upload interface
+             */
+            showFileUploadInterface() {
+                this.hideLoading();
+                this.hideInfoMessage();
+                this.errorElement.style.display = 'none';
+                this.activitiesContainer.style.display = 'none';
+                this.fileUploadSection.style.display = 'flex';
+            }
+
+            /**
+             * Handle file upload
+             * @param {Event} event - File input change event
+             */
+            async handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                console.log('檔案選擇:', file.name, file.size, 'bytes');
+                
+                try {
+                    this.showLoading('正在讀取Excel檔案...');
+                    this.fileUploadSection.style.display = 'none';
+                    
+                    const arrayBuffer = await file.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    console.log('工作表名稱:', workbook.SheetNames);
+                    
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    console.log('解析的原始數據:', jsonData);
+                    
+                    const mappedData = jsonData.map(row => ({
+                        title: row['標題'] || row['title'] || '',
+                        content: row['內容'] || row['content'] || '',
+                        datetime: row['時間'] || row['datetime'] || '',
+                        location: row['地點'] || row['location'] || '',
+                        registerUrl: row['報名連結'] || row['registerUrl'] || '',
+                        videoUrl: row['影片連結'] || row['videoUrl'] || ''
+                    })).filter(activity => {
+                        // Filter out empty activities (at least title, content, or datetime must have content)
+                        return activity.title.trim() !== '' || 
+                               activity.content.trim() !== '' || 
+                               activity.datetime.trim() !== '';
+                    });
+                    
+                    console.log('轉換後的數據:', mappedData);
+                    console.log('過濾後活動數量:', mappedData.length);
+                    
+                    if (mappedData.length === 0) {
+                        throw new Error('Excel檔案中沒有找到有效數據');
+                    }
+                    
+                    await this.renderActivities(mappedData);
+                    
+                } catch (error) {
+                    console.error('處理Excel檔案錯誤:', error);
+                    this.showError(`讀取Excel檔案失敗：${error.message}`);
+                    this.fileUploadSection.style.display = 'flex';
+                }
+            }
+
+            /**
+             * Show loading with custom message
+             * @param {string} message - Loading message
+             */
+            showLoading(message = '載入活動資訊中...') {
+                this.loadingElement.querySelector('i').nextSibling.textContent = ' ' + message;
+                this.loadingElement.style.display = 'flex';
+            }
+
+            /**
+             * Load Excel file and parse data
+             * @param {string} filePath - Path to Excel file
+             * @returns {Promise<Array>} - Parsed activity data
+             */
+            async loadExcelFile(filePath) {
+                try {
+                    console.log('嘗試讀取檔案路徑:', filePath);
+                    console.log('當前網頁URL:', window.location.href);
+                    
+                    const response = await fetch(filePath);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                    }
+                    
+                    console.log('成功取得檔案回應:', response.status);
+                    const arrayBuffer = await response.arrayBuffer();
+                    console.log('檔案大小:', arrayBuffer.byteLength, 'bytes');
+                    
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                    console.log('工作表名稱:', workbook.SheetNames);
+                    
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    console.log('解析的原始數據:', jsonData);
+                    
+                    const mappedData = jsonData.map(row => ({
+                        title: row['標題'] || row['title'] || '',
+                        content: row['內容'] || row['content'] || '',
+                        datetime: row['時間'] || row['datetime'] || '',
+                        location: row['地點'] || row['location'] || '',
+                        registerUrl: row['報名連結'] || row['registerUrl'] || '',
+                        videoUrl: row['影片連結'] || row['videoUrl'] || ''
+                    })).filter(activity => {
+                        // Filter out empty activities (at least title, content, or datetime must have content)
+                        return activity.title.trim() !== '' || 
+                               activity.content.trim() !== '' || 
+                               activity.datetime.trim() !== '';
+                    });
+                    
+                    console.log('轉換後的數據:', mappedData);
+                    console.log('過濾後活動數量:', mappedData.length);
+                    return mappedData;
+                } catch (error) {
+                    console.error('載入Excel檔案詳細錯誤:', {
+                        message: error.message,
+                        name: error.name,
+                        stack: error.stack
+                    });
+                    throw error;
+                }
+            }
+
+            /**
+             * Render activities on the page
+             * @param {Array} activities - Array of activity objects
+             * @returns {Promise<void>}
+             */
+            async renderActivities(activities) {
+                this.hideLoading();
+                this.errorElement.style.display = 'none';
+                
+                if (!activities || activities.length === 0) {
+                    this.showError('目前沒有活動資訊');
+                    return;
+                }
+
+                this.activitiesContainer.innerHTML = '';
+                
+                activities.forEach((activity, index) => {
+                    const cardElement = this.createActivityCard(activity, index);
+                    this.activitiesContainer.appendChild(cardElement);
+                });
+
+                this.activitiesContainer.style.display = 'grid';
+            }
+
+            /**
+             * Create an activity card element
+             * @param {Object} activity - Activity data object
+             * @param {number} index - Card index for animation delay
+             * @returns {HTMLElement} - Activity card element
+             */
+            createActivityCard(activity, index) {
+                const card = document.createElement('div');
+                card.className = 'activity-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+
+                const videoHtml = activity.videoUrl ? 
+                    `<div class="video-container">
+                        <iframe src="${activity.videoUrl}" 
+                                title="活動影片" 
+                                frameborder="0" 
+                                allowfullscreen>
+                        </iframe>
+                    </div>` : '';
+
+                const registerBtnHtml = activity.registerUrl ?
+                    `<a href="${activity.registerUrl}" target="_blank" class="register-btn">
+                        <i class="fas fa-pencil-alt"></i> 立即報名
+                    </a>` : '';
+
+                card.innerHTML = `
+                    <h2 class="card-title">${this.escapeHtml(activity.title)}</h2>
+                    <div class="card-content">${this.escapeHtml(activity.content)}</div>
+                    ${videoHtml}
+                    <div class="card-datetime">
+                        <i class="fas fa-calendar-alt"></i> ${this.escapeHtml(activity.datetime)}
+                    </div>
+                    <div class="card-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        ${this.escapeHtml(activity.location)}
+                    </div>
+                    ${registerBtnHtml}
+                `;
+
+                return card;
+            }
+
+            /**
+             * Escape HTML special characters
+             * @param {string} text - Text to escape
+             * @returns {string} - Escaped text
+             */
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            /**
+             * Hide loading indicator
+             */
+            hideLoading() {
+                this.loadingElement.style.display = 'none';
+            }
+
+            /**
+             * Show error message
+             * @param {string} message - Custom error message
+             */
+            showError(message = null) {
+                this.hideLoading();
+                this.hideInfoMessage();
+                this.activitiesContainer.style.display = 'none';
+                
+                if (message) {
+                    this.errorElement.querySelector('p').textContent = message;
+                }
+                
+                this.errorElement.style.display = 'block';
+            }
+
+            /**
+             * Show info message
+             * @param {string} message - Info message
+             */
+            showInfoMessage(message) {
+                this.hideLoading();
+                this.errorElement.style.display = 'none';
+                
+                if (message) {
+                    this.infoElement.querySelector('p').innerHTML = message;
+                }
+                
+                this.infoElement.style.display = 'flex';
+            }
+
+            /**
+             * Hide info message
+             */
+            hideInfoMessage() {
+                this.infoElement.style.display = 'none';
+            }
+        }
+
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const activityBoard = new ActivityBoard();
+            activityBoard.init();
+        });
+
+        // Global function to use sample data
+        function useSampleData() {
+            const activityBoard = new ActivityBoard();
+            const sampleData = [
+                {
+                    title: "暑假一起 fun fun fun",
+                    content: "邀請你的朋友一起來吧！\n美食、遊戲、詩歌、信息、溫馨時光 …",
+                    datetime: "7/12、8/9 週六晚上 5:30 - 8:30",
+                    location: "新竹市慈雲路65號",
+                    registerUrl: "https://forms.gle/osPSFMpMHz2ZGf8D9",
+                    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+                },
+                {
+                    title: "青年敬拜夜",
+                    content: "一起在敬拜中經歷神的同在\n透過音樂與禱告親近主",
+                    datetime: "每週五晚上 7:00 - 9:00",
+                    location: "新竹市慈雲路65號",
+                    registerUrl: "https://forms.gle/example",
+                    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+                },
+                {
+                    title: "小組聚會",
+                    content: "深度分享與代禱\n建立美好的肢體關係",
+                    datetime: "每週三晚上 7:30 - 9:30",
+                    location: "新竹市慈雲路65號",
+                    registerUrl: "",
+                    videoUrl: ""
+                }
+            ];
+            
+            console.log('使用示例數據:', sampleData);
+            activityBoard.fileUploadSection.style.display = 'none';
+            activityBoard.renderActivities(sampleData);
+        }
+
+        // Example function to load Excel file (call this with your Excel file path)
+        async function loadExcelData(filePath) {
+            const activityBoard = new ActivityBoard();
+            try {
+                const data = await activityBoard.loadExcelFile(filePath);
+                await activityBoard.renderActivities(data);
+            } catch (error) {
+                console.error('Failed to load Excel data:', error);
+                activityBoard.showError();
+            }
+        }
+    </script>
+</body>
+</html>
