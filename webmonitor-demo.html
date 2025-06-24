@@ -271,6 +271,23 @@
                     🔄 獲取最新資料
                 </button>
             </div>
+            
+            <div class="control-group">
+                <label>自動更新：</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="autoUpdate"> 啟用定期更新</label>
+                </div>
+                <label for="updateInterval">更新間隔：</label>
+                <select id="updateInterval">
+                    <option value="1">1分鐘</option>
+                    <option value="2">2分鐘</option>
+                    <option value="5" selected>5分鐘</option>
+                    <option value="10">10分鐘</option>
+                    <option value="15">15分鐘</option>
+                    <option value="30">30分鐘</option>
+                    <option value="60">60分鐘</option>
+                </select>
+            </div>
         </div>
         
         <div id="status" class="status" style="display: none;"></div>
@@ -294,6 +311,8 @@
         // 建立API實例
         const api = new BankOfTaiwanAPI();
         let lastUpdateTime = null;
+        let autoUpdateTimer = null;
+        let nextUpdateTime = null;
 
         /**
          * 獲取匯率資料
@@ -336,8 +355,7 @@
                 
                 if (result.success) {
                     displayResults(result.data, result.timestamp, result.source);
-                    statusEl.textContent = `✅ 成功獲取資料 - 更新時間：${new Date(result.timestamp).toLocaleString('zh-TW')}`;
-                    statusEl.style.display = 'block';
+                    updateStatus(result.timestamp);
                     lastUpdateTime = result.timestamp;
                 } else {
                     throw new Error(result.message || '未知錯誤');
@@ -458,14 +476,77 @@
             return card;
         }
 
+        /**
+         * 更新狀態顯示
+         */
+        function updateStatus(timestamp) {
+            const statusEl = document.getElementById('status');
+            const isAutoUpdate = document.getElementById('autoUpdate').checked;
+            
+            let statusText = `✅ 成功獲取資料 - 更新時間：${new Date(timestamp).toLocaleString('zh-TW')}`;
+            
+            if (isAutoUpdate && nextUpdateTime) {
+                statusText += ` | 下次更新：${new Date(nextUpdateTime).toLocaleString('zh-TW')}`;
+            }
+            
+            statusEl.textContent = statusText;
+            statusEl.style.display = 'block';
+        }
+
+        /**
+         * 設定自動更新
+         */
+        function setupAutoUpdate() {
+            // 清除現有的定時器
+            if (autoUpdateTimer) {
+                clearInterval(autoUpdateTimer);
+                autoUpdateTimer = null;
+                nextUpdateTime = null;
+            }
+            
+            const isAutoUpdate = document.getElementById('autoUpdate').checked;
+            const intervalMinutes = parseInt(document.getElementById('updateInterval').value);
+            
+            if (isAutoUpdate && intervalMinutes > 0) {
+                const intervalMs = intervalMinutes * 60 * 1000;
+                
+                // 設定下次更新時間
+                nextUpdateTime = Date.now() + intervalMs;
+                
+                // 設定定時器
+                autoUpdateTimer = setInterval(() => {
+                    console.log(`自動更新 - 間隔：${intervalMinutes}分鐘`);
+                    fetchRates();
+                    // 更新下次更新時間
+                    nextUpdateTime = Date.now() + intervalMs;
+                }, intervalMs);
+                
+                console.log(`已啟用自動更新，間隔：${intervalMinutes}分鐘`);
+                
+                // 立即更新狀態顯示
+                if (lastUpdateTime) {
+                    updateStatus(lastUpdateTime);
+                }
+            } else {
+                console.log('已停用自動更新');
+                
+                // 立即更新狀態顯示（移除下次更新時間）
+                if (lastUpdateTime) {
+                    updateStatus(lastUpdateTime);
+                }
+            }
+        }
+
         // 頁面載入時自動獲取資料
         document.addEventListener('DOMContentLoaded', function() {
             console.log('頁面載入完成，準備獲取資料...');
+            
+            // 設定事件監聽器
+            document.getElementById('autoUpdate').addEventListener('change', setupAutoUpdate);
+            document.getElementById('updateInterval').addEventListener('change', setupAutoUpdate);
+            
             fetchRates();
         });
-
-        // 每30秒自動更新一次（可選）
-        // setInterval(fetchRates, 30000);
     </script>
 </body>
 </html> 
