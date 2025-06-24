@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多基金監控與比較系統 - Multi-Fund Monitor</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .fund-selector {
+            background: #f8f9ff;
+            padding: 25px 30px;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .selector-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .fund-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .fund-option {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-height: 80px;
+        }
+        
+        .fund-option:hover {
+            border-color: #3498db;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.2);
+        }
+        
+        .fund-option.selected {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .fund-option input[type="checkbox"] {
+            margin-right: 15px;
+            margin-top: 5px;
+            transform: scale(1.3);
+        }
+        
+        .fund-emoji {
+            font-size: 1.8em;
+            margin-right: 15px;
+            margin-top: 5px;
+        }
+        
+        .fund-details {
+            flex: 1;
+        }
+        
+        .fund-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .fund-code {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .controls {
+            padding: 30px;
+            background: #f8f9ff;
+            border-bottom: 1px solid #e1e5e9;
+            text-align: center;
+        }
+        
+        .control-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .fetch-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .fetch-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .fetch-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .compare-btn {
+            background: linear-gradient(45deg, #f39c12, #e67e22);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .compare-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+        
+        .compare-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .auto-update-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .auto-update-group label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .auto-update-group input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        
+        .auto-update-group select {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .status {
+            padding: 20px 30px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin: 0 30px;
+            border-radius: 0 8px 8px 0;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 15px;
+            margin: 20px 30px;
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #666;
+            display: none;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .results {
+            padding: 30px;
+        }
+        
+        .summary {
+            background: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        
+        .summary h3 {
+            margin: 0 0 15px 0;
+            color: #2c3e50;
+            font-size: 1.3em;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #bdc3c7;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .comparison-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: none;
+        }
+        
+        .comparison-title {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #27ae60;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .performance-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .performance-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #27ae60;
+            text-align: center;
+        }
+        
+        .performance-card.best {
+            border-left-color: #2ecc71;
+            background: #f0fff4;
+        }
+        
+        .performance-card.worst {
+            border-left-color: #e74c3c;
+            background: #fff5f5;
+        }
+        
+        .performance-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .performance-fund {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .performance-value {
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+        
+        .performance-value.positive {
+            color: #27ae60;
+        }
+        
+        .performance-value.negative {
+            color: #e74c3c;
+        }
+        
+        .comparison-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .comparison-table th {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+        
+        .comparison-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .comparison-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .fund-row {
+            display: flex;
+            align-items: center;
+        }
+        
+        .fund-row .emoji {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .nav-card {
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .nav-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .nav-card.mining {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+        
+        .nav-card.gold {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+        
+        .nav-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 15px;
+        }
+        
+        .nav-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .nav-info:last-child {
+            border-bottom: none;
+        }
+        
+        .nav-label {
+            font-weight: 500;
+            opacity: 0.9;
+            font-size: 1em;
+        }
+        
+        .nav-value {
+            font-weight: 600;
+            font-size: 1.2em;
+        }
+        
+        .nav-value.positive {
+            color: #2ecc71;
+        }
+        
+        .nav-value.negative {
+            color: #ff6b6b;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .fund-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .performance-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 多基金監控與比較系統</h1>
+            <p>BlackRock 基金組合即時監控與績效分析</p>
+        </div>
+        
+        <div class="fund-selector">
+            <div class="selector-title">📋 選擇要監控的基金</div>
+            <div class="fund-options" id="fundOptions">
+                <!-- 基金選項將由 JavaScript 動態生成 -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <button id="fetchBtn" class="fetch-btn" onclick="fetchSelectedFunds()">
+                    📊 獲取基金數據
+                </button>
+                
+                <button id="compareBtn" class="compare-btn" onclick="compareFunds()" disabled>
+                    🔍 比較基金績效
+                </button>
+                
+                <div class="auto-update-group">
+                    <label for="autoUpdate">
+                        <input type="checkbox" id="autoUpdate" onchange="setupAutoUpdate()">
+                        自動更新
+                    </label>
+                    
+                    <select id="updateInterval" onchange="setupAutoUpdate()">
+                        <option value="5">5分鐘</option>
+                        <option value="10">10分鐘</option>
+                        <option value="15" selected>15分鐘</option>
+                        <option value="30">30分鐘</option>
+                        <option value="60">1小時</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div id="status" class="status"></div>
+        <div id="error" class="error"></div>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            正在獲取基金數據，請稍候...
+        </div>
+
+        <div class="results">
+            <div id="summary" class="summary">
+                <h3>📈 監控概況</h3>
+                <div class="summary-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">監控基金數</div>
+                        <div class="stat-value" id="totalFunds">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">成功獲取</div>
+                        <div class="stat-value" id="successCount">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">資料筆數</div>
+                        <div class="stat-value" id="totalRecords">-</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">最新更新</div>
+                        <div class="stat-value" id="lastUpdate">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="comparisonSection" class="comparison-section">
+                <div class="comparison-title">🏆 基金績效比較</div>
+                
+                <div class="performance-cards">
+                    <div class="performance-card best">
+                        <div class="performance-label">📈 最佳表現</div>
+                        <div class="performance-fund" id="bestPerformer">-</div>
+                        <div class="performance-value positive" id="bestPerformance">-</div>
+                    </div>
+                    
+                    <div class="performance-card worst">
+                        <div class="performance-label">📉 較弱表現</div>
+                        <div class="performance-fund" id="worstPerformer">-</div>
+                        <div class="performance-value negative" id="worstPerformance">-</div>
+                    </div>
+                    
+                    <div class="performance-card">
+                        <div class="performance-label">💰 最高淨值</div>
+                        <div class="performance-fund" id="highestNavFund">-</div>
+                        <div class="performance-value" id="highestNavValue">-</div>
+                    </div>
+                    
+                    <div class="performance-card">
+                        <div class="performance-label">💸 最低淨值</div>
+                        <div class="performance-fund" id="lowestNavFund">-</div>
+                        <div class="performance-value" id="lowestNavValue">-</div>
+                    </div>
+                </div>
+                
+                <div class="comparison-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>基金</th>
+                                <th>最新淨值</th>
+                                <th>漲跌</th>
+                                <th>漲跌幅</th>
+                                <th>日期</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div id="dataGrid" class="data-grid">
+                <p style="text-align: center; color: #666; font-size: 1.2em;">
+                    請選擇基金並點擊「獲取基金數據」開始監控
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load fund crawler script -->
+    <script src="fund_crawler.js"></script>
+    
+    <script>
+        // Global variables
+        let autoUpdateTimer = null;
+        let nextUpdateTime = null;
+        let lastUpdateTime = null;
+        let currentFundsData = null;
+        let selectedFunds = [];
+
+        /**
+         * Initialize the application
+         */
+        function initializeApp() {
+            console.log('Initializing multi-fund monitor...');
+            
+            // Generate fund option UI
+            generateFundOptions();
+            
+            // Setup event listeners
+            document.getElementById('autoUpdate').addEventListener('change', setupAutoUpdate);
+            document.getElementById('updateInterval').addEventListener('change', setupAutoUpdate);
+        }
+
+        /**
+         * Generate fund selection options
+         */
+        function generateFundOptions() {
+            const fundOptionsEl = document.getElementById('fundOptions');
+            const availableFunds = multiFundCrawler.getAvailableFunds();
+            
+            fundOptionsEl.innerHTML = '';
+            
+            availableFunds.forEach(fundCode => {
+                const config = multiFundCrawler.getFundConfig(fundCode);
+                
+                const optionEl = document.createElement('div');
+                optionEl.className = 'fund-option';
+                optionEl.onclick = () => toggleFundSelection(fundCode, optionEl);
+                
+                                 optionEl.innerHTML = `
+                     <input type="checkbox" id="fund_${fundCode}" onchange="toggleFundSelection('${fundCode}', this.parentElement)">
+                     <div class="fund-emoji">${config.emoji}</div>
+                     <div class="fund-details">
+                         <div class="fund-name">${config.shortName}</div>
+                         <div class="fund-code">${config.code}</div>
+                         <div class="fund-code" style="margin-top: 3px; font-size: 0.8em; color: #888;">${config.name}</div>
+                     </div>
+                 `;
+                
+                fundOptionsEl.appendChild(optionEl);
+            });
+        }
+
+        /**
+         * Toggle fund selection
+         * 
+         * @param {string} fundCode - Fund code
+         * @param {HTMLElement} optionEl - Option element
+         */
+        function toggleFundSelection(fundCode, optionEl) {
+            const checkbox = optionEl.querySelector('input[type="checkbox"]');
+            
+            if (checkbox.checked) {
+                if (!selectedFunds.includes(fundCode)) {
+                    selectedFunds.push(fundCode);
+                }
+                optionEl.classList.add('selected');
+            } else {
+                selectedFunds = selectedFunds.filter(code => code !== fundCode);
+                optionEl.classList.remove('selected');
+            }
+            
+            // Update compare button state
+            document.getElementById('compareBtn').disabled = selectedFunds.length < 2;
+            
+            console.log('Selected funds:', selectedFunds);
+        }
+
+        /**
+         * Fetch selected funds data
+         */
+        async function fetchSelectedFunds() {
+            if (selectedFunds.length === 0) {
+                alert('請至少選擇一個基金進行監控');
+                return;
+            }
+            
+            const fetchBtn = document.getElementById('fetchBtn');
+            const loadingEl = document.getElementById('loading');
+            const errorEl = document.getElementById('error');
+            
+            // Hide previous results and errors
+            errorEl.style.display = 'none';
+            
+            // Show loading state
+            loadingEl.style.display = 'block';
+            fetchBtn.disabled = true;
+            
+            try {
+                console.log('Fetching data for selected funds:', selectedFunds);
+                
+                // Call multi-fund crawler
+                const result = await multiFundCrawler.getMultipleFundsData(selectedFunds);
+                console.log('Multi-fund API response:', result);
+                
+                loadingEl.style.display = 'none';
+                
+                if (result.success) {
+                    currentFundsData = result.funds;
+                    displayMultiFundResults(result);
+                    updateStatus(result.timestamp, 'moneydj');
+                    lastUpdateTime = result.timestamp;
+                    
+                    // Enable compare button if multiple funds selected
+                    document.getElementById('compareBtn').disabled = selectedFunds.length < 2;
+                } else {
+                    throw new Error(result.error || '未知錯誤');
+                }
+                
+            } catch (error) {
+                console.error('Failed to fetch multi-fund data:', error);
+                loadingEl.style.display = 'none';
+                errorEl.textContent = `❌ 獲取基金數據失敗: ${error.message}`;
+                errorEl.style.display = 'block';
+            } finally {
+                fetchBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Display multi-fund results
+         * 
+         * @param {Object} result - Multi-fund result object
+         */
+        function displayMultiFundResults(result) {
+            const dataGridEl = document.getElementById('dataGrid');
+            const summaryEl = document.getElementById('summary');
+            
+            dataGridEl.innerHTML = '';
+            
+            // Show summary
+            summaryEl.style.display = 'block';
+            document.getElementById('totalFunds').textContent = result.summary.totalFunds;
+            document.getElementById('successCount').textContent = result.summary.successCount;
+            document.getElementById('totalRecords').textContent = result.summary.totalRecords;
+            document.getElementById('lastUpdate').textContent = new Date(result.timestamp).toLocaleString('zh-TW');
+            
+            // Display each fund's data
+            Object.values(result.funds).forEach(fundData => {
+                if (fundData.data.latest) {
+                    const fundCard = createMultiFundCard(fundData);
+                    dataGridEl.appendChild(fundCard);
+                }
+            });
+            
+            if (dataGridEl.children.length === 0) {
+                dataGridEl.innerHTML = '<p style="text-align: center; color: #666; font-size: 1.2em;">無法獲取任何基金數據</p>';
+            }
+        }
+
+        /**
+         * Create fund card for multi-fund view
+         * 
+         * @param {Object} fundData - Fund data object
+         * @returns {HTMLElement} Fund card element
+         */
+        function createMultiFundCard(fundData) {
+            const card = document.createElement('div');
+            const categoryClass = fundData.fundConfig.category === '礦業' ? 'mining' : 'gold';
+            card.className = `nav-card ${categoryClass}`;
+            
+            const latest = fundData.data.latest;
+            const highest = fundData.data.highest;
+            const lowest = fundData.data.lowest;
+            
+            // Format change values
+            const changeSign = latest.change >= 0 ? '+' : '';
+            const changeClass = latest.change >= 0 ? 'positive' : 'negative';
+            const changePercentSign = latest.changePercent >= 0 ? '+' : '';
+            const changePercentClass = latest.changePercent >= 0 ? 'positive' : 'negative';
+            
+                         card.innerHTML = `
+                 <div class="nav-title">${fundData.fundConfig.emoji} ${fundData.fundConfig.shortName}</div>
+                 <div style="text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                     <div style="font-size: 0.9em; opacity: 0.8; line-height: 1.3;">${fundData.fundConfig.name}</div>
+                 </div>
+                 <div class="nav-info">
+                     <span class="nav-label">最新日期</span>
+                     <span class="nav-value">${latest.date}</span>
+                 </div>
+                <div class="nav-info">
+                    <span class="nav-label">最新淨值</span>
+                    <span class="nav-value">${latest.nav.toFixed(4)}</span>
+                </div>
+                <div class="nav-info">
+                    <span class="nav-label">漲跌</span>
+                    <span class="nav-value ${changeClass}">${changeSign}${latest.change.toFixed(4)}</span>
+                </div>
+                <div class="nav-info">
+                    <span class="nav-label">漲跌幅</span>
+                    <span class="nav-value ${changePercentClass}">${changePercentSign}${latest.changePercent.toFixed(2)}%</span>
+                </div>
+                                 <div class="nav-info">
+                     <span class="nav-label">歷史最高</span>
+                     <span class="nav-value">${highest.nav.toFixed(4)} (${highest.date})</span>
+                 </div>
+                 <div class="nav-info">
+                     <span class="nav-label">歷史最低</span>
+                     <span class="nav-value">${lowest.nav.toFixed(4)} (${lowest.date})</span>
+                 </div>
+            `;
+            
+            return card;
+        }
+
+        /**
+         * Compare funds performance
+         */
+        function compareFunds() {
+            if (!currentFundsData || Object.keys(currentFundsData).length < 2) {
+                alert('需要至少兩個基金的數據才能進行比較');
+                return;
+            }
+            
+            // Get comparison results
+            const comparison = multiFundCrawler.compareFunds(currentFundsData);
+            console.log('Comparison results:', comparison);
+            
+            // Display comparison
+            displayComparison(comparison);
+        }
+
+        /**
+         * Display fund comparison results
+         * 
+         * @param {Object} comparison - Comparison results object
+         */
+        function displayComparison(comparison) {
+            const comparisonEl = document.getElementById('comparisonSection');
+            comparisonEl.style.display = 'block';
+            
+            // Update performance cards
+            if (comparison.bestPerformer) {
+                document.getElementById('bestPerformer').textContent = comparison.bestPerformer.fundConfig.shortName;
+                document.getElementById('bestPerformance').textContent = `+${comparison.bestPerformer.data.latest.changePercent.toFixed(2)}%`;
+            }
+            
+            if (comparison.worstPerformer) {
+                document.getElementById('worstPerformer').textContent = comparison.worstPerformer.fundConfig.shortName;
+                const worstValue = comparison.worstPerformer.data.latest.changePercent;
+                document.getElementById('worstPerformance').textContent = `${worstValue >= 0 ? '+' : ''}${worstValue.toFixed(2)}%`;
+            }
+            
+            if (comparison.highestNav) {
+                document.getElementById('highestNavFund').textContent = comparison.highestNav.fundConfig.shortName;
+                document.getElementById('highestNavValue').textContent = comparison.highestNav.data.latest.nav.toFixed(4);
+            }
+            
+            if (comparison.lowestNav) {
+                document.getElementById('lowestNavFund').textContent = comparison.lowestNav.fundConfig.shortName;
+                document.getElementById('lowestNavValue').textContent = comparison.lowestNav.data.latest.nav.toFixed(4);
+            }
+            
+            // Update comparison table
+            const tableBody = document.getElementById('comparisonTableBody');
+            tableBody.innerHTML = '';
+            
+            comparison.comparison.forEach((fund, index) => {
+                const row = document.createElement('tr');
+                const changeSign = fund.changePercent >= 0 ? '+' : '';
+                const changeClass = fund.changePercent >= 0 ? 'positive' : 'negative';
+                
+                                 row.innerHTML = `
+                     <td>
+                         <div class="fund-row">
+                             <span class="emoji">${fund.fundConfig.emoji}</span>
+                             <div>
+                                 <div style="font-weight: 600;">${fund.fundConfig.shortName}</div>
+                                 <div style="font-size: 0.8em; color: #666; margin-top: 2px;">${fund.fundConfig.name}</div>
+                             </div>
+                         </div>
+                     </td>
+                     <td>${fund.latestNav.toFixed(4)}</td>
+                     <td class="${changeClass}">${changeSign}${fund.change.toFixed(4)}</td>
+                     <td class="${changeClass}">${changeSign}${fund.changePercent.toFixed(2)}%</td>
+                     <td>${fund.date}</td>
+                 `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        /**
+         * Update status display
+         * 
+         * @param {number} timestamp - Update timestamp
+         * @param {string} source - Data source
+         */
+        function updateStatus(timestamp, source) {
+            const statusEl = document.getElementById('status');
+            const isAutoUpdate = document.getElementById('autoUpdate').checked;
+            
+            let statusText = `✅ 成功獲取 ${selectedFunds.length} 個基金數據 - 更新時間：${new Date(timestamp).toLocaleString('zh-TW')}`;
+            statusText += ` | 數據來源：${source === 'mock' ? '模擬數據' : 'MoneyDJ'}`;
+            
+            if (isAutoUpdate && nextUpdateTime) {
+                statusText += ` | 下次更新：${new Date(nextUpdateTime).toLocaleString('zh-TW')}`;
+            }
+            
+            statusEl.textContent = statusText;
+            statusEl.style.display = 'block';
+        }
+
+        /**
+         * Setup auto-update functionality
+         */
+        function setupAutoUpdate() {
+            // Clear existing timer
+            if (autoUpdateTimer) {
+                clearInterval(autoUpdateTimer);
+                autoUpdateTimer = null;
+                nextUpdateTime = null;
+            }
+            
+            const isAutoUpdate = document.getElementById('autoUpdate').checked;
+            const intervalMinutes = parseInt(document.getElementById('updateInterval').value);
+            
+            if (isAutoUpdate && intervalMinutes > 0 && selectedFunds.length > 0) {
+                const intervalMs = intervalMinutes * 60 * 1000;
+                
+                // Set next update time
+                nextUpdateTime = Date.now() + intervalMs;
+                
+                // Setup timer
+                autoUpdateTimer = setInterval(() => {
+                    console.log(`Auto update - interval: ${intervalMinutes} minutes`);
+                    fetchSelectedFunds();
+                    // Update next update time
+                    nextUpdateTime = Date.now() + intervalMs;
+                }, intervalMs);
+                
+                console.log(`Auto update enabled, interval: ${intervalMinutes} minutes`);
+                
+                // Update status display immediately
+                if (lastUpdateTime) {
+                    updateStatus(lastUpdateTime, 'auto');
+                }
+            } else {
+                console.log('Auto update disabled');
+                
+                // Update status display immediately (remove next update time)
+                if (lastUpdateTime) {
+                    updateStatus(lastUpdateTime, 'manual');
+                }
+            }
+        }
+
+        // Initialize app when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing multi-fund monitor...');
+            initializeApp();
+        });
+    </script>
+</body>
+</html>
